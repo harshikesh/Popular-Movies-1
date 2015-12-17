@@ -4,20 +4,22 @@ package com.example.harshikesh.nanodegree_02_spotifier.ui;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.GridView;
 
 import com.example.harshikesh.nanodegree_02_spotifier.R;
-import com.example.harshikesh.nanodegree_02_spotifier.adapter.MovieGridAdapter;
+import com.example.harshikesh.nanodegree_02_spotifier.adapter.GridRecyclerAdapter;
 import com.example.harshikesh.nanodegree_02_spotifier.interfaces.ApiConstants;
 import com.example.harshikesh.nanodegree_02_spotifier.model.MovieResutModel;
 import com.example.harshikesh.nanodegree_02_spotifier.model.ResultModel;
@@ -35,11 +37,12 @@ import java.net.URL;
 public class MainFragment extends Fragment{
 
     private static String TAG=MainFragment.class.getSimpleName();
-    MovieGridAdapter mMovieGridAdapter;
+    GridRecyclerAdapter gridAdapter;
     private ResultModel mResultModel;
-    private  GridView gridview;
+    RecyclerView recList;
     private Context mContext;
-
+    private boolean mTwoPane = false;
+    private GridLayoutManager glm ;
     public MainFragment()
     {
     }
@@ -47,8 +50,7 @@ public class MainFragment extends Fragment{
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        FetchMovieTask movietask=new FetchMovieTask();
-        movietask.execute();
+
     }
 
     @Override
@@ -57,44 +59,87 @@ public class MainFragment extends Fragment{
         mContext=context;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        //Get preference
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        String sort = pref.getString(getString(R.string.sort_by_key), getString(R.string.sort_by_default));
+        String url= ApiConstants.DISCOVER_BASE_URL+sort+ApiConstants.API_KEY;
+        FetchMovieTask movietask = new FetchMovieTask(url);
+        movietask.execute();
+    }
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         View view= inflater.inflate(R.layout.fragment_main,container,false);
 
-        mMovieGridAdapter= new MovieGridAdapter(getContext(),mResultModel);
 
-        gridview= (GridView)view.findViewById(R.id.grid_movie);
-        gridview.setAdapter(mMovieGridAdapter);
-        gridview.setOnItemClickListener(onItemCLickListener);
+         recList = (RecyclerView) view.findViewById(R.id.recyclerview);
+        recList.setHasFixedSize(true);
+
+        if (getActivity().findViewById(R.id.detail_container) != null) {
+            mTwoPane = true;
+        }
+        if(getActivity().getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT){
+            glm = new GridLayoutManager(mContext,2);
+        }
+        else{
+            glm = new GridLayoutManager(mContext,3);
+        }
+        glm.setOrientation(GridLayoutManager.VERTICAL);
+
+        recList.setLayoutManager(glm);
+        gridAdapter= new GridRecyclerAdapter(mContext,mResultModel);
+        recList.setAdapter(gridAdapter);
+        gridAdapter.setOnItemClickListener(new GridRecyclerAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(View view, int position) {
+                MovieResutModel model = mResultModel.getResults().get(position);
+                Bundle bundle = new Bundle();
+                bundle.putParcelable("detail_model", model);
+                if(mTwoPane)
+                {
+                    instantiateDetailFragment(bundle);
+                }else {
+                    Intent intent = new Intent(getContext(), MovieDetailActivity.class);
+                    intent.putExtras(bundle);
+                    startActivity(intent);
+                }
+            }
+        });
         return view;
     }
 
-    AdapterView.OnItemClickListener onItemCLickListener = new AdapterView.OnItemClickListener() {
-        @Override
-        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+   private void instantiateDetailFragment(Bundle bundle)
+    {
+        MovieDetailFragment fragment= new MovieDetailFragment();
+        FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
+        ft.setCustomAnimations(android.support.design.R.anim.abc_fade_in, android.support.design.R.anim.abc_fade_out);
+        ft.replace(R.id.detail_container,fragment);
+        fragment.setArguments(bundle);
+        ft.commit();
 
-           MovieResutModel model=mResultModel.getResults().get(position);
-            Intent intent= new Intent(getContext(),MovieDetailActivity.class);
-            intent.putExtra("detail_model",model);
-            startActivity(intent);
-        }
-    };
+    }
+
 
     class FetchMovieTask extends AsyncTask<Void,Void,ResultModel>
     {
 
         private  String TAG=FetchMovieTask.class.getSimpleName();
         BufferedReader bReader;
+        String url;
+        FetchMovieTask(String lUrl)
+        {
+            url=lUrl;
+        }
         @Override
         protected ResultModel doInBackground(Void... params) {
 
-            //Get preference
-            SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-            String sort = pref.getString(getString(R.string.sort_by_key), getString(R.string.sort_by_key));
 
-            String url= ApiConstants.DISCOVER_BASE_URL+sort+ApiConstants.API_KEY;
             Log.d(TAG,url);
             HttpURLConnection urlConnection = null;
             StringBuffer buffer=new StringBuffer();
@@ -146,10 +191,14 @@ public class MainFragment extends Fragment{
             super.onPostExecute(model);
             if(model!=null)
             {
-                mMovieGridAdapter=null;
-                mMovieGridAdapter = new MovieGridAdapter(mContext,model);
-                gridview.setAdapter(mMovieGridAdapter);
-                mMovieGridAdapter.notifyDataSetChanged();
+                 gridAdapter.setData(model);
+                gridAdapter.notifyDataSetChanged();
+                if(mTwoPane) {
+                    Log.d(TAG, "Two pane mode");
+                    Bundle bundle = new Bundle();
+                    bundle.putParcelable("detail_model", mResultModel.getResults().get(0));
+                    instantiateDetailFragment(bundle);
+                }
             }
         }
     }

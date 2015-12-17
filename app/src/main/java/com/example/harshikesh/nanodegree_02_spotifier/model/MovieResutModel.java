@@ -1,5 +1,8 @@
 package com.example.harshikesh.nanodegree_02_spotifier.model;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import com.example.harshikesh.nanodegree_02_spotifier.interfaces.ApiConstants;
 
 import java.io.Serializable;
@@ -7,10 +10,48 @@ import java.io.Serializable;
 /**
  * Created by harshikesh.kumar on 22/11/15.
  */
-public class MovieResutModel implements Serializable{
+public class MovieResutModel implements Parcelable{
 
     boolean adult;
     String id;
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    private MovieResutModel(Parcel in){
+        backdrop_path= in.readString();;
+        original_language= in.readString();;
+        original_title= in.readString();;
+        overview= in.readString();;
+       release_date= in.readString();;
+        poster_path= in.readString();;
+        title= in.readString();;
+        video= in.readString();;
+        id= in.readString();;
+        popularity= in.readFloat();;
+        vote_average= in.readFloat();;
+        vote_count= in.readLong();;
+
+    }
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+
+            dest.writeString(backdrop_path);
+            dest.writeString(original_language);
+            dest.writeString(original_title);
+        dest.writeString(overview);
+        dest.writeString(release_date);
+        dest.writeString(poster_path);
+        dest.writeString(title);
+        dest.writeString(video);
+        dest.writeString(id);
+        dest.writeFloat(popularity);
+        dest.writeFloat(vote_average);
+        dest.writeFloat(vote_count);
+
+    }
 
     String backdrop_path;//":"/kvXLZqY0Ngl1XSw7EaMQO0C1CCj.jpg",
     String [] genre_ids;//
@@ -42,7 +83,7 @@ public class MovieResutModel implements Serializable{
     }
 
     public String getBackdrop_path() {
-        return backdrop_path;
+        return ApiConstants.IMAGE_BASE_URL_BACKDROP+backdrop_path;
     }
 
     public void setBackdrop_path(String backdrop_path) {
@@ -136,6 +177,20 @@ public class MovieResutModel implements Serializable{
     public void setVote_count(long vote_count) {
         this.vote_count = vote_count;
     }
+
+    public static final Parcelable.Creator<MovieResutModel> CREATOR = new Parcelable.Creator<MovieResutModel>() {
+
+
+        @Override
+        public MovieResutModel createFromParcel(Parcel source) {
+            return new MovieResutModel(source);
+        }
+
+        @Override
+        public MovieResutModel[] newArray(int size) {
+            return new MovieResutModel[size];
+        }
+    };
 
     @Override
     public String toString() {

@@ -5,15 +5,20 @@
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     >
-    <GridView
-        android:id="@+id/grid_movie"
+    <!--<GridView-->
+        <!--android:id="@+id/grid_movie"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="match_parent"-->
+        <!--android:numColumns="2"-->
+        <!--android:cacheColorHint="@color/colorAccent"-->
+        <!--android:verticalSpacing="0dp"-->
+        <!--android:horizontalSpacing="0dp"-->
+        <!--android:stretchMode="columnWidth"-->
+    <!--android:gravity="bottom"-->
+    <!--</GridView>-->
+    <android.support.v7.widget.RecyclerView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:numColumns="2"
-        android:cacheColorHint="@color/colorAccent"
-        android:verticalSpacing="0dp"
-        android:horizontalSpacing="0dp"
-        android:stretchMode="columnWidth"
-        >
-    </GridView>
+        android:layout_margin="2dp"
+        android:id="@+id/recyclerview"/>
 </LinearLayout>
