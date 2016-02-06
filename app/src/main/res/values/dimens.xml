@@ -5,19 +5,24 @@
     <dimen name="fab_margin">16dp</dimen>
 
     <!-- grid item height-->
-    <dimen name="discover_grid_height">240dp</dimen>
+    <dimen name="discover_grid_height">260dp</dimen>
     <dimen name="discover_grid_width">200dp</dimen>
 
     <dimen name="margin_inline">4dp</dimen>
     <dimen name="margin_default">8dp</dimen>
     <dimen name="margin_large">16dp</dimen>
     <dimen name="margin_extra_large">24dp</dimen>
+    <dimen name="margin_80dp">80dp</dimen>
+    <dimen name="margin_144dp">144dp</dimen>
+    <dimen name="padding_8dp">8dp</dimen>
 
     <!-- specific view dimensions and spacing -->
-    <dimen name="details_backdrop_height">200dp</dimen>
+    <dimen name="details_backdrop_height">250dp</dimen>
     <dimen name="details_poster_width">100dp</dimen>
     <dimen name="details_poster_height">150dp</dimen>
     <dimen name="details_poster_margin_top">172dp</dimen>
+
+    <dimen name="dimen_50dp">50dp</dimen>
 
     <!-- misc dimensions -->
     <item name="body_text_line_spacing" format="float" type="dimen">1.15</item>
