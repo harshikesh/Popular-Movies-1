@@ -27,6 +27,8 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
+import butterknife.Bind;
+import butterknife.ButterKnife;
 import com.example.harshikesh.nanodegree_02_spotifier.R;
 import com.example.harshikesh.nanodegree_02_spotifier.api.ApiManager;
 import com.example.harshikesh.nanodegree_02_spotifier.dataprovider.UpdateDatabaseTask;
@@ -56,19 +58,19 @@ public class MovieDetailFragment extends BaseFragment implements View.OnClickLis
   private MovieTrailerModel mTrailerModel;
   private int mPallColor;
   private Activity mActivity;
-  private CollapsingToolbarLayout mCollapsingToolBar;
+  @Bind(R.id.collapsing_toolbar) CollapsingToolbarLayout mCollapsingToolBar;
   private int mStatusColor;
-  private TextView tvTitle;
-  private TextView tvReleaseDate;
-  private TextView rating;
-  private ImageView ivPoster;
-  private ImageView backdrop;
-  private TextView tvOverview;
+  @Bind(R.id.title) TextView tvTitle;
+  @Bind(R.id.release) TextView tvReleaseDate;
+  @Bind(R.id.rating) TextView rating;
+  @Bind(R.id.poster_image) ImageView ivPoster;
+  @Bind(R.id.background) ImageView backdrop;
+  @Bind(R.id.plot_synopsis) TextView tvOverview;
   private MovieResutModel mMovieModel;
-  private CoordinatorLayout coordinatorLayout;
-  private FloatingActionButton favouriteButton;
-  private FloatingActionButton shareButton;
-  private FloatingActionButton trailerButton;
+  @Bind(R.id.coordinate_layout) CoordinatorLayout coordinatorLayout;
+  @Bind(R.id.favourite) FloatingActionButton favouriteButton;
+  @Bind(R.id.share) FloatingActionButton shareButton;
+  @Bind(R.id.trailers) FloatingActionButton trailerButton;
 
   @Nullable @Override public View onCreateView(LayoutInflater inflater, ViewGroup container,
       Bundle savedInstanceState) {
@@ -79,18 +81,7 @@ public class MovieDetailFragment extends BaseFragment implements View.OnClickLis
     extras = this.getArguments();
     mMovieModel = (MovieResutModel) extras.getParcelable("detail_model");
     Log.d(TAG, mMovieModel.toString());
-
-    coordinatorLayout = (CoordinatorLayout) rootView.findViewById(R.id.coordinate_layout);
-    mCollapsingToolBar = (CollapsingToolbarLayout) rootView.findViewById(R.id.collapsing_toolbar);
-    tvTitle = (TextView) rootView.findViewById(R.id.title);
-    tvReleaseDate = (TextView) rootView.findViewById(R.id.release);
-    rating = (TextView) rootView.findViewById(R.id.rating);
-    ivPoster = (ImageView) rootView.findViewById(R.id.poster_image);
-    backdrop = (ImageView) rootView.findViewById(R.id.background);
-    tvOverview = (TextView) rootView.findViewById(R.id.plot_synopsis);
-    favouriteButton = (FloatingActionButton) rootView.findViewById(R.id.favourite);
-    shareButton = (FloatingActionButton) rootView.findViewById(R.id.share);
-    trailerButton = (FloatingActionButton) rootView.findViewById(R.id.trailers);
+    ButterKnife.bind(this, rootView);
 
     mCollapsingToolBar.setTitle(mMovieModel.getTitle());
     mCollapsingToolBar.setExpandedTitleColor(getResources().getColor(android.R.color.transparent));
@@ -268,8 +259,7 @@ public class MovieDetailFragment extends BaseFragment implements View.OnClickLis
   }
 
   @Override public void onSuccess(String val) {
-    showSnackbar(coordinatorLayout,
-        mMovieModel.getTitle() + " " + val);
+    showSnackbar(coordinatorLayout, mMovieModel.getTitle() + " " + val);
   }
 
   @Override public void onFailure() {

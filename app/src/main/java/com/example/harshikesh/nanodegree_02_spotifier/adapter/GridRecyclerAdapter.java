@@ -7,6 +7,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import butterknife.Bind;
+import butterknife.ButterKnife;
 import com.example.harshikesh.nanodegree_02_spotifier.R;
 import com.example.harshikesh.nanodegree_02_spotifier.model.ResultModel;
 import com.squareup.picasso.Picasso;
@@ -71,15 +73,13 @@ public class GridRecyclerAdapter extends RecyclerView.Adapter<GridRecyclerAdapte
   }
 
   public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-    public ImageView iconView;
-    public TextView titletextview;
-    public TextView ratingtextview;
+    @Bind(R.id.img_grid) ImageView iconView;
+    @Bind(R.id.title_text_view) TextView titletextview;
+    @Bind(R.id.rating_text_view) TextView ratingtextview;
 
     public ViewHolder(View v) {
       super(v);
-      iconView = (ImageView) v.findViewById(R.id.img_grid);
-      titletextview = (TextView) v.findViewById(R.id.title_text_view);
-      ratingtextview = (TextView) v.findViewById(R.id.rating_text_view);
+      ButterKnife.bind(this,v);
       iconView.setOnClickListener(this);
     }
 
