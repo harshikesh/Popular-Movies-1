@@ -59,11 +59,13 @@ public class MainFragment extends BaseFragment implements Callback<ResultModel> 
     super.onCreate(savedInstanceState);
     mActivity = (MainActivity) getActivity();
     pref = PreferenceManager.getDefaultSharedPreferences(getActivity());
+    mMoviesFilter = pref.getString(getString(R.string.sort_by_key),
+        getString(R.string.sort_by_default));
     if (savedInstanceState == null) {
+      Log.d(TAG,"first time fetching");
       fetchMovie(true);
     } else {
       mResultModel = (ResultModel) savedInstanceState.getParcelable(PARCELABLE_KEY);
-      mMoviesFilter = pref.getString(getString(R.string.sort_by_key), getString(R.string.sort_by_default));
     }
   }
 
@@ -252,7 +254,10 @@ public class MainFragment extends BaseFragment implements Callback<ResultModel> 
         gridAdapter.setData(mResultModel);
         gridAdapter.notifyDataSetChanged();
       } else {
-        showSnackbar(recList, "You don't have favorite movie");
+        mResultModel = null;
+        gridAdapter.setData(mResultModel);
+        gridAdapter.notifyDataSetChanged();
+        showSnackbar(recList, getResources().getString(R.string.no_fav_movie));
         Log.d(TAG, "No favourite items");
       }
     }

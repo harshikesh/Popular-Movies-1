@@ -26,6 +26,7 @@
     <string name="top_rated_movies">Top Rated</string>
     <string name="most_popular_movies">Most Popular</string>
     <string name="my_favorite">My Favorite Movies</string>
+    <string name="no_fav_movie">You don\'t have favorite movie</string>
 
 
 </resources>
