@@ -17,6 +17,16 @@ public class MovieResutModel implements Parcelable {
     return 0;
   }
 
+  public MovieResutModel(String id,String title,String overview,String releasedate,String rating,String poster,String backdrop)
+  {
+    this.id=id;
+    this.title=title;
+    this.overview=overview;
+    this.release_date=releasedate;
+    this.vote_average=rating;
+    this.poster_path=poster;
+    this.backdrop_path=backdrop;
+  }
   public MovieResutModel(Parcel in) {
     backdrop_path = in.readString();
     original_language = in.readString();
@@ -28,7 +38,7 @@ public class MovieResutModel implements Parcelable {
     video = in.readString();
     id = in.readString();
     popularity = in.readFloat();
-    vote_average = in.readFloat();
+    vote_average = in.readString();
     vote_count = in.readLong();
   }
 
@@ -44,7 +54,7 @@ public class MovieResutModel implements Parcelable {
     dest.writeString(video);
     dest.writeString(id);
     dest.writeFloat(popularity);
-    dest.writeFloat(vote_average);
+    dest.writeString(vote_average);
     dest.writeFloat(vote_count);
   }
 
@@ -59,7 +69,7 @@ public class MovieResutModel implements Parcelable {
   float popularity;//":56.44978,
   String title;//":"Ant-Man",
   String video;//":false,
-  float vote_average;//":7.0,
+  String vote_average;//":7.0,
   long vote_count;//":1593
 
   public boolean isAdult() {
@@ -158,11 +168,11 @@ public class MovieResutModel implements Parcelable {
     this.video = video;
   }
 
-  public float getVote_average() {
+  public String getVote_average() {
     return vote_average;
   }
 
-  public void setVote_average(float vote_average) {
+  public void setVote_average(String vote_average) {
     this.vote_average = vote_average;
   }
 

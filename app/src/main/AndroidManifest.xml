@@ -34,6 +34,10 @@
                 <category android:name="android.intent.cetagory.PREFERENCE" />
             </intent-filter>
         </activity>
+        <provider
+            android:name=".dataprovider.MoviesContentProvider"
+            android:authorities="com.harshikesh.FavoriteMoviesProvider"
+            android:exported="false" />
     </application>
 
 </manifest>

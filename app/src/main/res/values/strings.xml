@@ -13,7 +13,19 @@
     <string name="pref_sort_by_vote_average_desc_label">Highest Rated</string>
     <string name="pref_sort_by_vote_average_desc">highest_rated</string>
 
+    <string name="pref_sort_by_favorite_label">My Favorite</string>
+    <string name="pref_sort_by_favorite_value">favorite</string>
+
     <string name="movies_trailer_dialog">Choose Trailer</string>
     <string name="no_connection">No Connection</string>
+    <string name="something_went_wrong">Something went wrong</string>
+    <string name="unable_to_reach">Unable to reach server</string>
+    <string name="added_to_fav">added to favorite</string>
+    <string name="deleted_from_fav">removed from favorite</string>
+    <string name="thats_all">That\'s all folks!</string>
+    <string name="top_rated_movies">Top Rated</string>
+    <string name="most_popular_movies">Most Popular</string>
+    <string name="my_favorite">My Favorite Movies</string>
+
 
 </resources>

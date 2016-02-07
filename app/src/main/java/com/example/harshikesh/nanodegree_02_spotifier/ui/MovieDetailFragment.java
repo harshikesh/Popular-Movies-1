@@ -29,7 +29,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import com.example.harshikesh.nanodegree_02_spotifier.R;
 import com.example.harshikesh.nanodegree_02_spotifier.api.ApiManager;
+import com.example.harshikesh.nanodegree_02_spotifier.dataprovider.UpdateDatabaseTask;
 import com.example.harshikesh.nanodegree_02_spotifier.interfaces.AppConstants;
+import com.example.harshikesh.nanodegree_02_spotifier.interfaces.Iupdate;
 import com.example.harshikesh.nanodegree_02_spotifier.interfaces.MoviesInterface;
 import com.example.harshikesh.nanodegree_02_spotifier.model.Language;
 import com.example.harshikesh.nanodegree_02_spotifier.model.MovieResutModel;
@@ -43,7 +45,7 @@ import retrofit.client.Response;
 /**
  * Created by harshikesh.kumar on 22/11/15.
  */
-public class MovieDetailFragment extends BaseFragment {
+public class MovieDetailFragment extends BaseFragment implements View.OnClickListener, Iupdate {
 
   private static String TAG = MovieDetailFragment.class.getSimpleName();
 
@@ -56,44 +58,55 @@ public class MovieDetailFragment extends BaseFragment {
   private Activity mActivity;
   private CollapsingToolbarLayout mCollapsingToolBar;
   private int mStatusColor;
+  private TextView tvTitle;
+  private TextView tvReleaseDate;
+  private TextView rating;
+  private ImageView ivPoster;
+  private ImageView backdrop;
+  private TextView tvOverview;
+  private MovieResutModel mMovieModel;
+  private CoordinatorLayout coordinatorLayout;
+  private FloatingActionButton favouriteButton;
+  private FloatingActionButton shareButton;
+  private FloatingActionButton trailerButton;
 
   @Nullable @Override public View onCreateView(LayoutInflater inflater, ViewGroup container,
       Bundle savedInstanceState) {
     mActivity = getActivity();
+
     View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
 
     extras = this.getArguments();
+    mMovieModel = (MovieResutModel) extras.getParcelable("detail_model");
+    Log.d(TAG, mMovieModel.toString());
 
-    final MovieResutModel model = extras.getParcelable("detail_model");
-    Log.d(TAG, model.toString());
-    final CoordinatorLayout coordinatorLayout = (CoordinatorLayout) rootView.findViewById(
-        R.id.coordinate_layout);
-
+    coordinatorLayout = (CoordinatorLayout) rootView.findViewById(R.id.coordinate_layout);
     mCollapsingToolBar = (CollapsingToolbarLayout) rootView.findViewById(R.id.collapsing_toolbar);
+    tvTitle = (TextView) rootView.findViewById(R.id.title);
+    tvReleaseDate = (TextView) rootView.findViewById(R.id.release);
+    rating = (TextView) rootView.findViewById(R.id.rating);
+    ivPoster = (ImageView) rootView.findViewById(R.id.poster_image);
+    backdrop = (ImageView) rootView.findViewById(R.id.background);
+    tvOverview = (TextView) rootView.findViewById(R.id.plot_synopsis);
+    favouriteButton = (FloatingActionButton) rootView.findViewById(R.id.favourite);
+    shareButton = (FloatingActionButton) rootView.findViewById(R.id.share);
+    trailerButton = (FloatingActionButton) rootView.findViewById(R.id.trailers);
 
-    TextView tvTitle = (TextView) rootView.findViewById(R.id.title);
-    TextView tvReleaseDate = (TextView) rootView.findViewById(R.id.release);
-    TextView rating = (TextView) rootView.findViewById(R.id.rating);
-    ImageView ivPoster = (ImageView) rootView.findViewById(R.id.poster_image);
-    final ImageView backdrop = (ImageView) rootView.findViewById(R.id.background);
-    final FloatingActionButton favourite =
-        (FloatingActionButton) rootView.findViewById(R.id.favourite);
-    final FloatingActionButton share = (FloatingActionButton) rootView.findViewById(R.id.share);
-    final FloatingActionButton trailers =
-        (FloatingActionButton) rootView.findViewById(R.id.trailers);
-    mCollapsingToolBar.setTitle(model.getTitle());
-    mCollapsingToolBar.setExpandedTitleColor(
-        getResources().getColor(android.R.color.transparent));
+    mCollapsingToolBar.setTitle(mMovieModel.getTitle());
+    mCollapsingToolBar.setExpandedTitleColor(getResources().getColor(android.R.color.transparent));
+    tvTitle.setText(mMovieModel.getTitle());
+    tvReleaseDate.setText(mMovieModel.getRelease_date().substring(0, 4));
+    rating.setText("" + mMovieModel.getVote_average());
 
-    TextView tvOverview = (TextView) rootView.findViewById(R.id.plot_synopsis);
-
-    tvTitle.setText(model.getTitle());
-    tvReleaseDate.setText(model.getRelease_date().substring(0, 4));
-    rating.setText("" + model.getVote_average());
     final PaletteTransformation transformation = PaletteTransformation.getInstance();
-    Picasso.with(getContext()).load(model.getPoster_path()).into(ivPoster);
     Picasso.with(getContext())
-        .load(model.getBackdrop_path())
+        .load(mMovieModel.getPoster_path())
+        .fit()
+        .placeholder(R.drawable.movie_placeholder)
+        .error(R.drawable.error_placeholder)
+        .into(ivPoster);
+    Picasso.with(getContext())
+        .load(mMovieModel.getBackdrop_path())
         .fit()
         .placeholder(R.drawable.movie_placeholder)
         .error(R.drawable.error_placeholder)
@@ -118,81 +131,20 @@ public class MovieDetailFragment extends BaseFragment {
 
           }
         });
-    tvOverview.setText(model.getOverview());
+    tvOverview.setText(mMovieModel.getOverview());
 
     sharedpreferences = getActivity().getSharedPreferences(AppConstants.LIKED_MOVIES_SHAREDPREF,
         Context.MODE_PRIVATE);
     editor = sharedpreferences.edit();
-    if (sharedpreferences.getBoolean(model.getId(), false)) {
-      favourite.setImageResource(R.drawable.heart_filled);
+    if (sharedpreferences.getBoolean(mMovieModel.getId(), false)) {
+      favouriteButton.setImageResource(R.drawable.heart_filled);
     } else {
-      favourite.setImageResource(R.drawable.heart_empty);
+      favouriteButton.setImageResource(R.drawable.heart_empty);
     }
 
-    final MoviesInterface movieinterface =
-        ApiManager.getInstance().getRestAdapter().create(MoviesInterface.class);
-
-    favourite.setOnClickListener(new View.OnClickListener() {
-      @Override public void onClick(View v) {
-
-          if (sharedpreferences.getBoolean(model.getId(), false)) {
-            favourite.setImageResource(R.drawable.heart_empty);
-            editor.putBoolean(model.getId(), false);
-          } else {
-            favourite.setImageResource(R.drawable.heart_filled);
-            editor.putBoolean(model.getId(), true);
-          }
-          editor.commit();
-
-      }
-    });
-    share.setOnClickListener(new View.OnClickListener() {
-      @Override public void onClick(View v) {
-        if (isAdded()) {
-          if (isInternetAvailable()) {
-            movieinterface.videos(model.getId(), Language.LANGUAGE_EN.toString(), new Callback<MovieTrailerModel>() {
-                  @Override public void success(MovieTrailerModel movieTrailerModel, Response response) {
-                    Log.d(TAG, "Response retrofit" + movieTrailerModel + " \n" + response.toString());
-                    if (movieTrailerModel != null) {
-                      Intent intent_Share = new Intent();
-                      intent_Share.setAction(Intent.ACTION_SEND);
-                      intent_Share.setType("text/plain");
-                      intent_Share.putExtra(Intent.EXTRA_TEXT,
-                          ApiManager.VIDEO_BASE_URL + movieTrailerModel.getResults().get(0).getKey());
-                      startActivity(Intent.createChooser(intent_Share, "Share via"));
-                    }
-                  }
-
-                  @Override public void failure(RetrofitError error) {
-                    Log.d(TAG, "Response retrofit error" + error);
-                  }
-                });
-          } else {
-            showSnackbar(coordinatorLayout, getResources().getString(R.string.no_connection));
-          }
-        }
-      }
-    });
-    trailers.setOnClickListener(new View.OnClickListener() {
-      @Override public void onClick(View v) {
-      if (isInternetAvailable()) {
-        movieinterface.videos(model.getId(), Language.LANGUAGE_EN.toString(),
-            new Callback<MovieTrailerModel>() {
-              @Override
-              public void success(MovieTrailerModel movieTrailerModel, Response response) {
-                Log.d(TAG, "Response retrofit" + movieTrailerModel + " \n" + response.toString());
-                watchYoutubeTrailer(movieTrailerModel);
-              }
-
-              @Override public void failure(RetrofitError error) {
-                Log.d(TAG, "Response retrofit error" + error);
-              }
-            });
-      } else {
-        showSnackbar(coordinatorLayout, getResources().getString(R.string.no_connection));
-      }
-      }
-    });
+    favouriteButton.setOnClickListener(this);
+    shareButton.setOnClickListener(this);
+    trailerButton.setOnClickListener(this);
     return rootView;
   }
 
@@ -228,7 +180,7 @@ public class MovieDetailFragment extends BaseFragment {
 
   @TargetApi(Build.VERSION_CODES.LOLLIPOP)
   protected void setActionbarAndStatusBarColors(int actionBarColor, int statusBarColor) {
-    Log.d(TAG, "actionbar colors "+actionBarColor + "status color" + statusBarColor );
+    Log.d(TAG, "actionbar colors " + actionBarColor + "status color" + statusBarColor);
     try {
       ((MovieDetailActivity) mActivity).getSupportActionBar()
           .setBackgroundDrawable(new ColorDrawable(actionBarColor));
@@ -240,5 +192,88 @@ public class MovieDetailFragment extends BaseFragment {
     } catch (Exception e) {
       e.printStackTrace();
     }
+  }
+
+  @Override public void onClick(View v) {
+    final MoviesInterface movieinterface =
+        ApiManager.getInstance().getRestAdapter().create(MoviesInterface.class);
+    switch (v.getId()) {
+      case R.id.favourite:
+
+        if (sharedpreferences.getBoolean(mMovieModel.getId(), false)) {
+          favouriteButton.setImageResource(R.drawable.heart_empty);
+          editor.putBoolean(mMovieModel.getId(), false);
+        } else {
+          favouriteButton.setImageResource(R.drawable.heart_filled);
+          editor.putBoolean(mMovieModel.getId(), true);
+        }
+        editor.commit();
+        //Update database
+        UpdateDatabaseTask updateTask = new UpdateDatabaseTask(mActivity, mMovieModel, this);
+        updateTask.execute();
+        break;
+      case R.id.share:
+        if (isAdded()) {
+          if (isInternetAvailable()) {
+            movieinterface.videos(mMovieModel.getId(), Language.LANGUAGE_EN.toString(),
+                new Callback<MovieTrailerModel>() {
+                  @Override
+                  public void success(MovieTrailerModel movieTrailerModel, Response response) {
+                    Log.d(TAG,
+                        "Response retrofit" + movieTrailerModel + " \n" + response.toString());
+                    if (movieTrailerModel != null) {
+                      Intent intent_Share = new Intent();
+                      intent_Share.setAction(Intent.ACTION_SEND);
+                      intent_Share.setType("text/plain");
+                      intent_Share.putExtra(Intent.EXTRA_TEXT,
+                          ApiManager.VIDEO_BASE_URL + movieTrailerModel.getResults()
+                              .get(0)
+                              .getKey());
+                      startActivity(Intent.createChooser(intent_Share, "Share via"));
+                    }
+                  }
+
+                  @Override public void failure(RetrofitError error) {
+                    Log.d(TAG, "Response retrofit error" + error);
+                    showSnackbar(coordinatorLayout,
+                        getResources().getString(R.string.something_went_wrong));
+                  }
+                });
+          } else {
+            showSnackbar(coordinatorLayout, getResources().getString(R.string.no_connection));
+          }
+        }
+        break;
+      case R.id.trailers:
+        if (isInternetAvailable()) {
+          movieinterface.videos(mMovieModel.getId(), Language.LANGUAGE_EN.toString(),
+              new Callback<MovieTrailerModel>() {
+                @Override
+                public void success(MovieTrailerModel movieTrailerModel, Response response) {
+                  Log.d(TAG, "Response retrofit" + movieTrailerModel + " \n" + response.toString());
+                  watchYoutubeTrailer(movieTrailerModel);
+                }
+
+                @Override public void failure(RetrofitError error) {
+                  Log.d(TAG, "Response retrofit error" + error);
+                  showSnackbar(coordinatorLayout,
+                      getResources().getString(R.string.something_went_wrong));
+                }
+              });
+        } else {
+          showSnackbar(coordinatorLayout, getResources().getString(R.string.no_connection));
+        }
+        break;
+    }
+  }
+
+  @Override public void onSuccess(String val) {
+    showSnackbar(coordinatorLayout,
+        mMovieModel.getTitle() + " " + val);
+  }
+
+  @Override public void onFailure() {
+    showSnackbar(coordinatorLayout,
+        mMovieModel.getTitle() + " " + getResources().getString(R.string.something_went_wrong));
   }
 }

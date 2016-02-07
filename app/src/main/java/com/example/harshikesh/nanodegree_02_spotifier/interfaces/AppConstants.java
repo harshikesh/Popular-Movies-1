@@ -8,4 +8,5 @@ public interface AppConstants {
     public static String LIKED_MOVIES_SHAREDPREF="liked_movies";
     public static String MOST_POPULAR="most_popular";
     public static String HIGHEST_RATED="highest_rated";
+    public static String FAVORITE="favorite";
 }

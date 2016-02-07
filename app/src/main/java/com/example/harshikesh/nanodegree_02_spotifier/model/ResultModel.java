@@ -19,6 +19,9 @@ public class ResultModel implements Parcelable {
     this.results = results;
   }
 
+  public ResultModel () {
+  }
+
   private ResultModel(Parcel in) {
   }
 

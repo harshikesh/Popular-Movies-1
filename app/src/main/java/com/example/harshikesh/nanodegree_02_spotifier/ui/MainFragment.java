@@ -4,6 +4,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
@@ -17,11 +20,14 @@ import android.view.ViewGroup;
 import com.example.harshikesh.nanodegree_02_spotifier.R;
 import com.example.harshikesh.nanodegree_02_spotifier.adapter.GridRecyclerAdapter;
 import com.example.harshikesh.nanodegree_02_spotifier.api.ApiManager;
+import com.example.harshikesh.nanodegree_02_spotifier.dataprovider.DatabaseHelper;
+import com.example.harshikesh.nanodegree_02_spotifier.dataprovider.MoviesContentProvider;
 import com.example.harshikesh.nanodegree_02_spotifier.interfaces.AppConstants;
 import com.example.harshikesh.nanodegree_02_spotifier.interfaces.MoviesInterface;
 import com.example.harshikesh.nanodegree_02_spotifier.model.Language;
 import com.example.harshikesh.nanodegree_02_spotifier.model.MovieResutModel;
 import com.example.harshikesh.nanodegree_02_spotifier.model.ResultModel;
+import java.util.ArrayList;
 import retrofit.Callback;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
@@ -43,12 +49,14 @@ public class MainFragment extends BaseFragment implements Callback<ResultModel> 
   private MoviesInterface iMovieInterface;
   private int mPage = 1;
   private String mMoviesFilter = AppConstants.MOST_POPULAR;
+  private MainActivity mActivity;
 
   public MainFragment() {
   }
 
   @Override public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    mActivity = (MainActivity) getActivity();
     if (savedInstanceState == null) {
       fetchMovie(true);
     } else {
@@ -63,19 +71,13 @@ public class MainFragment extends BaseFragment implements Callback<ResultModel> 
 
   @Override public void onResume() {
     super.onResume();
-    if (isInternetAvailable()) {
-      //Get preference
-      SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-      String moviesFilter =
-          pref.getString(getString(R.string.sort_by_key), getString(R.string.sort_by_default));
-      if (!mMoviesFilter.equalsIgnoreCase(moviesFilter) || mResultModel == null) {
-        mMoviesFilter = moviesFilter;
-        fetchMovie(true);
-      }
-    } else {
-      if (recList != null) {
-        showSnackbar(recList, getResources().getString(R.string.no_connection));
-      }
+    //Get preference
+    SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getActivity());
+    String moviesFilter =
+        pref.getString(getString(R.string.sort_by_key), getString(R.string.sort_by_default));
+    if (!mMoviesFilter.equalsIgnoreCase(moviesFilter) || mResultModel == null) {
+      mMoviesFilter = moviesFilter;
+      fetchMovie(true);
     }
   }
 
@@ -87,7 +89,7 @@ public class MainFragment extends BaseFragment implements Callback<ResultModel> 
   /**
    * @param refresh whether the adapter should be refreshed.
    */
-  void fetchMovie(boolean refresh) {
+  private void fetchMovie(boolean refresh) {
     if (refresh) {
       mResultModel = null;
       mPage = 1;
@@ -96,9 +98,15 @@ public class MainFragment extends BaseFragment implements Callback<ResultModel> 
     iMovieInterface = mApiManager.getRestAdapter().create(MoviesInterface.class);
 
     if (mMoviesFilter.equals(AppConstants.HIGHEST_RATED)) {
+      mActivity.getSupportActionBar().setTitle(getResources().getString(R.string.top_rated_movies));
       iMovieInterface.topRated(mPage, Language.LANGUAGE_EN.toString(), this);
-    } else {
+    } else if (mMoviesFilter.equals(AppConstants.MOST_POPULAR)) {
+      mActivity.getSupportActionBar()
+          .setTitle(getResources().getString(R.string.most_popular_movies));
       iMovieInterface.popular(mPage, Language.LANGUAGE_EN.toString(), this);
+    } else if (mMoviesFilter.equals(AppConstants.FAVORITE)) {
+      mActivity.getSupportActionBar().setTitle(getResources().getString(R.string.my_favorite));
+      new LoadMoviesTask().execute();
     }
   }
 
@@ -106,7 +114,6 @@ public class MainFragment extends BaseFragment implements Callback<ResultModel> 
       Bundle savedInstanceState) {
 
     View view = inflater.inflate(R.layout.fragment_main, container, false);
-
     recList = (RecyclerView) view.findViewById(R.id.recyclerview);
     recList.setHasFixedSize(true);
     recList.setOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -119,12 +126,15 @@ public class MainFragment extends BaseFragment implements Callback<ResultModel> 
           int pastVisibleItem =
               ((GridLayoutManager) recyclerView.getLayoutManager()).findFirstVisibleItemPosition();
           if ((visibleItemCount + pastVisibleItem) >= totalItemCount) {
-            if(isInternetAvailable()) {
-              mPage++;
-              fetchMovie(false);
-            }else
-            {
-              showSnackbar(recList,getResources().getString(R.string.no_connection));
+            if (!mMoviesFilter.equals(AppConstants.FAVORITE)) {
+              if (isInternetAvailable()) {
+                mPage++;
+                fetchMovie(false);
+              } else {
+                showSnackbar(recList, getResources().getString(R.string.no_connection));
+              }
+            } else {
+              showSnackbar(recList, getResources().getString(R.string.thats_all));
             }
           }
         }
@@ -174,6 +184,35 @@ public class MainFragment extends BaseFragment implements Callback<ResultModel> 
     ft.commit();
   }
 
+  private int loadFavoriteMovies() {
+    // Retrieve movie records
+    mResultModel = null;
+    ResultModel resultModel = new ResultModel();
+    ArrayList<MovieResutModel> favsModel = new ArrayList<>();
+    MoviesContentProvider provider = new MoviesContentProvider(getContext());
+
+    Cursor c =
+        provider.query(Uri.parse(MoviesContentProvider.CONTENT_URI.toString()), null, null, null,
+            "title");
+    if (c != null) {
+      if (c.moveToFirst()) {
+        do {
+          favsModel.add(new MovieResutModel(c.getString(c.getColumnIndex(DatabaseHelper.MOVIE_ID)),
+              c.getString(c.getColumnIndex(DatabaseHelper.TITLE)),
+              c.getString(c.getColumnIndex(DatabaseHelper.OVERVIEW)),
+              String.valueOf(c.getLong(c.getColumnIndex(DatabaseHelper.RELEASE_DATE))),
+              c.getString(c.getColumnIndex(DatabaseHelper.AVERAGE_RATING)),
+              c.getString(c.getColumnIndex(DatabaseHelper.POSTER_IMAGE)),
+              c.getString(c.getColumnIndex(DatabaseHelper.BACKDROP_IMAGE))));
+        } while (c.moveToNext());
+      }
+      c.close();
+    }
+    resultModel.setResults(favsModel);
+    mResultModel = resultModel;
+    return favsModel.size();
+  }
+
   private void loadMovies(ResultModel resultModel) {
     if (mResultModel == null) {
       mResultModel = resultModel;
@@ -190,11 +229,34 @@ public class MainFragment extends BaseFragment implements Callback<ResultModel> 
     }
   }
 
+  class LoadMoviesTask extends AsyncTask<Void, Integer, Integer> {
+    @Override protected Integer doInBackground(Void... params) {
+      Integer size = loadFavoriteMovies();
+      return size;
+    }
+
+    @Override protected void onPostExecute(Integer size) {
+      super.onPostExecute(size);
+      Log.d(TAG, "Favorite movie size : " + size);
+      if (size > 0) {
+        gridAdapter.setData(mResultModel);
+        gridAdapter.notifyDataSetChanged();
+      } else {
+        showSnackbar(recList, "You don't have favorite movie");
+        Log.d(TAG, "No favourite items");
+      }
+    }
+  }
+
   @Override public void success(ResultModel resultModel, Response response) {
     loadMovies(resultModel);
   }
 
   @Override public void failure(RetrofitError error) {
+    mResultModel = null;
+    gridAdapter.setData(null);
+    gridAdapter.notifyDataSetChanged();
+    showSnackbar(recList, getResources().getString(R.string.unable_to_reach));
     Log.d(TAG, "MainFragment Retrofit failure" + error);
   }
 }
