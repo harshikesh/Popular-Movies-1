@@ -10,7 +10,7 @@ import retrofit.converter.GsonConverter;
 public class ApiManager {
 
     //Key to get access TMDB
-    public static String KEY="26cff5f3b8b7abdc8cae461878fe1835";
+    public static String KEY="";
 
     //Base Url for TMDB
     public static String IMAGE_BASE_URL="http://image.tmdb.org/t/p/w185";
