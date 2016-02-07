@@ -22,25 +22,26 @@ public class ResultModel implements Parcelable {
   public ResultModel () {
   }
 
+  public static final Parcelable.Creator<ResultModel> CREATOR = new Parcelable.Creator<ResultModel>() {
+    public ResultModel createFromParcel(Parcel in) {
+      return new ResultModel(in);
+    }
+
+    public ResultModel[] newArray(int size) {
+      return new ResultModel[size];
+    }
+  };
+
+
   private ResultModel(Parcel in) {
+    in.readTypedList(results,MovieResutModel.CREATOR);
   }
-
-  public static final Parcelable.Creator<MovieResutModel> CREATOR =
-      new Parcelable.Creator<MovieResutModel>() {
-
-        @Override public MovieResutModel createFromParcel(Parcel source) {
-          return new MovieResutModel(source);
-        }
-
-        @Override public MovieResutModel[] newArray(int size) {
-          return new MovieResutModel[size];
-        }
-      };
 
   @Override public int describeContents() {
     return 0;
   }
 
   @Override public void writeToParcel(Parcel dest, int flags) {
+    dest.writeTypedList(results);
   }
 }
