@@ -1,4 +1,4 @@
-# Popular-Movies-1
+# Popular-Movies
 
 Get your api key by registering on https://www.themoviedb.org/
 
