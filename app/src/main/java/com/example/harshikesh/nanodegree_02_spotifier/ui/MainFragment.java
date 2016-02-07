@@ -50,6 +50,7 @@ public class MainFragment extends BaseFragment implements Callback<ResultModel> 
   private int mPage = 1;
   private String mMoviesFilter = AppConstants.MOST_POPULAR;
   private MainActivity mActivity;
+  private SharedPreferences pref;
 
   public MainFragment() {
   }
@@ -57,10 +58,12 @@ public class MainFragment extends BaseFragment implements Callback<ResultModel> 
   @Override public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     mActivity = (MainActivity) getActivity();
+    pref = PreferenceManager.getDefaultSharedPreferences(getActivity());
     if (savedInstanceState == null) {
       fetchMovie(true);
     } else {
       mResultModel = (ResultModel) savedInstanceState.getParcelable(PARCELABLE_KEY);
+      mMoviesFilter = pref.getString(getString(R.string.sort_by_key), getString(R.string.sort_by_default));
     }
   }
 
@@ -72,12 +75,24 @@ public class MainFragment extends BaseFragment implements Callback<ResultModel> 
   @Override public void onResume() {
     super.onResume();
     //Get preference
-    SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getActivity());
     String moviesFilter =
         pref.getString(getString(R.string.sort_by_key), getString(R.string.sort_by_default));
+    setActionBarTitle(moviesFilter);
     if (!mMoviesFilter.equalsIgnoreCase(moviesFilter) || mResultModel == null) {
       mMoviesFilter = moviesFilter;
       fetchMovie(true);
+    }
+  }
+
+  private void setActionBarTitle(String filter)
+  {
+    //On Screen rotation the title will not change.
+    if (filter.equals(AppConstants.HIGHEST_RATED)) {
+      mActivity.getSupportActionBar().setTitle(getResources().getString(R.string.top_rated_movies));
+    } else if (filter.equals(AppConstants.MOST_POPULAR)) {
+      mActivity.getSupportActionBar().setTitle(getResources().getString(R.string.most_popular_movies));
+    } else if (filter.equals(AppConstants.FAVORITE)) {
+      mActivity.getSupportActionBar().setTitle(getResources().getString(R.string.my_favorite));
     }
   }
 
@@ -96,16 +111,11 @@ public class MainFragment extends BaseFragment implements Callback<ResultModel> 
     }
     mApiManager = ApiManager.getInstance();
     iMovieInterface = mApiManager.getRestAdapter().create(MoviesInterface.class);
-
     if (mMoviesFilter.equals(AppConstants.HIGHEST_RATED)) {
-      mActivity.getSupportActionBar().setTitle(getResources().getString(R.string.top_rated_movies));
       iMovieInterface.topRated(mPage, Language.LANGUAGE_EN.toString(), this);
     } else if (mMoviesFilter.equals(AppConstants.MOST_POPULAR)) {
-      mActivity.getSupportActionBar()
-          .setTitle(getResources().getString(R.string.most_popular_movies));
       iMovieInterface.popular(mPage, Language.LANGUAGE_EN.toString(), this);
     } else if (mMoviesFilter.equals(AppConstants.FAVORITE)) {
-      mActivity.getSupportActionBar().setTitle(getResources().getString(R.string.my_favorite));
       new LoadMoviesTask().execute();
     }
   }
