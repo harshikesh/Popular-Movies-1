@@ -62,8 +62,7 @@ public class MainFragment extends BaseFragment implements Callback<ResultModel> 
     mMoviesFilter = pref.getString(getString(R.string.sort_by_key),
         getString(R.string.sort_by_default));
     if (savedInstanceState == null) {
-      Log.d(TAG,"first time fetching");
-      fetchMovie(true);
+      Log.d(TAG,"savedInstance null");
     } else {
       mResultModel = (ResultModel) savedInstanceState.getParcelable(PARCELABLE_KEY);
     }
