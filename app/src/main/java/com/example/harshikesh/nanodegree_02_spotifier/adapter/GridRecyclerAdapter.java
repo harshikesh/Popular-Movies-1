@@ -25,6 +25,7 @@ public class GridRecyclerAdapter extends RecyclerView.Adapter<GridRecyclerAdapte
   public GridRecyclerAdapter(Context context, ResultModel result) {
     mContext = context;
     mMovieResutModel = result;
+
   }
 
   @Override public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
